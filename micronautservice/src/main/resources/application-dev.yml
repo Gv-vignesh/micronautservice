@@ -1,0 +1,126 @@
+# ===================================================================
+# Micronaut configuration for the "dev" environment.
+#
+# This configuration overrides the application.yml file.
+#
+# Full Micronaut configuration reference is available at:
+# https://docs.micronaut.io/latest/guide/configurationreference.html
+#
+# More information on JHipster configuration properties:
+# https://www.jhipster.tech/common-application-properties/
+# ===================================================================
+datasources:
+  default:
+    url: 'jdbc:postgresql://localhost:5432/micronautservice'
+    username: 'digitalnotary'
+    password: 'admin'
+    driverClassName: 'org.postgresql.Driver'
+    poolName: Hikari
+    autoCommit: false
+
+liquibase:
+  datasources:
+    default:
+      async: true
+      change-log: classpath:config/liquibase/master.xml
+      contexts: dev,faker
+
+mail:
+  host: localhost
+  port: 25
+  # username:
+  # password:
+
+jpa:
+  default:
+    properties:
+      hibernate:
+        id.new_generator_mappings: true
+        connection:
+          provider_disables_autocommit: true
+          autocommit: false
+        cache:
+          use_query_cache: false
+          use_second_level_cache: false
+        generate_statistics: false
+        show-sql: false
+
+logger:
+  levels:
+    ROOT: DEBUG
+    io.github.jhipster: DEBUG
+    com.mycompany.myapp: DEBUG
+
+micronaut:
+  server:
+    port: 8080
+    cors:
+      # CORS is only enabled by default with the "dev" profile, so BrowserSync can access the API
+      enabled: true
+      configurations:
+        web:
+          allowedOrigins:
+            - http://localhost:5173
+          allowedMethods:
+            - POST
+            - GET
+            - PUT
+            - DELETE
+            - OPTIONS
+          allowedHeaders:
+            - Content-Type
+            - Authorization
+            - X-Requested-With
+            - Accept
+            - Origin
+            - Access-Control-Request-Method
+            - Access-Control-Request-Headers
+          exposedHeaders:
+            - Authorization
+            - Link
+            - X-Total-Count
+            - X-${micronaut.application.name}-alert
+            - X-${micronaut.application.name}-error
+            - X-${micronaut.application.name}-params
+          allowCredentials: true
+          maxAge: 1800
+  security:
+    token:
+      jwt:
+        generator:
+          access-token:
+            expiration: 86400
+        signatures:
+          secret:
+            generator:
+              secret: ${jhipster.security.authentication.jwt.base64-secret:YmExNjkwMTEzM2I1ZmU4NmVlZGI1MzUzZjY4NjYzZDE3NTkyYWY0MDFjZmNhNWYxM2ZlNTIxMGMyMmRjN2EwMWQ3Y2Y2YjEwY2MzMTEyOTUwYjdlYzI0MjhlMWYwZTZkNTY1ZDFlN2U5ZjdiZDAxNWY5M2QwMzk5NTFkODY4NjU=}
+              base64: true
+              jws-algorithm: HS512
+
+# ===================================================================
+# JHipster specific properties
+#
+# Full reference is available at: https://www.jhipster.tech/common-application-properties/
+# ===================================================================
+
+jhipster:
+  mail: # specific JHipster mail property, for standard properties see MailProperties
+    from: micronautservice@localhost
+    base-url: http://127.0.0.1:8080
+  logging:
+    use-json-format: false # By default, logs are not in Json format
+    logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration
+      enabled: false
+      host: localhost
+      port: 5000
+      queue-size: 512
+# ===================================================================
+# Application specific properties
+# Add your own application properties here, see the ApplicationProperties class
+# to have type-safe configuration, like in the JHipsterProperties above
+#
+# More documentation is available at:
+# https://www.jhipster.tech/common-application-properties/
+# ===================================================================
+
+# application:

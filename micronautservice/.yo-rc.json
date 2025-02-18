@@ -1,0 +1,44 @@
+{
+  "generator-jhipster": {
+    "applicationType": "microservice",
+    "authenticationType": "jwt",
+    "backendType": "micronaut",
+    "baseName": "micronautservice",
+    "blueprints": [
+      {
+        "name": "generator-jhipster-micronaut",
+        "version": "3.7.0"
+      }
+    ],
+    "buildTool": "maven",
+    "cacheProvider": "no",
+    "clientFramework": "no",
+    "clientTestFrameworks": null,
+    "clientTheme": null,
+    "creationTimestamp": 1739367969621,
+    "devDatabaseType": "postgresql",
+    "enableHibernateCache": null,
+    "enableSwaggerCodegen": false,
+    "enableTranslation": true,
+    "entities": [],
+    "jhipsterVersion": "8.9.0",
+    "jwtSecretKey": "YmExNjkwMTEzM2I1ZmU4NmVlZGI1MzUzZjY4NjYzZDE3NTkyYWY0MDFjZmNhNWYxM2ZlNTIxMGMyMmRjN2EwMWQ3Y2Y2YjEwY2MzMTEyOTUwYjdlYzI0MjhlMWYwZTZkNTY1ZDFlN2U5ZjdiZDAxNWY5M2QwMzk5NTFkODY4NjU=",
+    "languages": ["en"],
+    "messageBroker": "no",
+    "microfrontend": null,
+    "microfrontends": [],
+    "monorepository": true,
+    "nativeLanguage": "en",
+    "packageName": "com.mycompany.myapp",
+    "prodDatabaseType": "postgresql",
+    "searchEngine": "no",
+    "serverPort": 8081,
+    "serverTestFrameworks": [],
+    "serviceDiscoveryType": "no",
+    "skipClient": true,
+    "skipCommitHook": true,
+    "syncUserWithIdp": null,
+    "testFrameworks": [[]],
+    "withAdminUi": null
+  }
+}

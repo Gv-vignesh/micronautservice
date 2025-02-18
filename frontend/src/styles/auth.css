@@ -1,0 +1,111 @@
+/* Reset default margins and padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.auth-container {
+    min-height: 100vh;
+    min-width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(45deg, #ff6b6b, #a741ff);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.auth-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    overflow: hidden;
+    margin: 1rem;  /* Add margin for small screens */
+}
+
+.auth-card::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+    border-radius: 50%;
+    z-index: 0;
+    opacity: 0.5;
+}
+
+.auth-card::after {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    right: -50px;
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(45deg, #a741ff, #ff6b6b);
+    border-radius: 50%;
+    z-index: 0;
+    opacity: 0.5;
+}
+
+.auth-content {
+    position: relative;
+    z-index: 1;
+}
+
+.auth-title {
+    color: #333;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.auth-input {
+    background-color: #f5f5f5 !important;
+    border-radius: 10px !important;
+    margin-bottom: 1rem !important;
+}
+
+.auth-button {
+    background: linear-gradient(45deg, #ff6b6b, #a741ff) !important;
+    border-radius: 10px !important;
+    padding: 0.8rem !important;
+    text-transform: none !important;
+    font-size: 1rem !important;
+    margin-top: 1rem !important;
+}
+
+.auth-link {
+    color: #666;
+    text-align: center;
+    display: block;
+    margin-top: 1rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.auth-link:hover {
+    color: #a741ff;
+}
+
+.forgot-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+} 
