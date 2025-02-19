@@ -6,6 +6,8 @@ import io.micronaut.data.annotation.MappedEntity
 import io.micronaut.data.annotation.TypeDef
 import io.micronaut.data.model.DataType
 import io.micronaut.serde.annotation.Serdeable
+import jakarta.persistence.*
+import java.time.Instant
 
 @MappedEntity("users")
 @Serdeable
@@ -25,6 +27,9 @@ class User {
     
     Date createdAt
     Date updatedAt
+    
+    @ManyToMany(mappedBy = "users")
+    Set<Task> tasks = new HashSet<>()
     
     User() {
         this.createdAt = new Date()

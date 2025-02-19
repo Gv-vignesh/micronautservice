@@ -7,4 +7,5 @@
 
     <include file="db/changelog/changes/01-create-users-table.xml"/>
     <include file="db/changelog/changes/02-add-profile-image.xml"/>
+    <include file="db/changelog/changes/03-create-task-tables.xml"/>
 </databaseChangeLog> 
