@@ -1,0 +1,84 @@
+name: Deploy Frontend to CloudFront
+
+on:
+  push:
+    branches: [ develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-deploy.yml'
+
+env:
+  AWS_REGION: us-east-1
+  S3_BUCKET: your-frontend-bucket
+  CLOUDFRONT_DISTRIBUTION_ID: your-distribution-id
+
+jobs:
+  deploy:
+    name: Deploy to CloudFront
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+
+    - name: Run tests
+      working-directory: ./frontend
+      run: npm test
+
+    - name: Get EKS Load Balancer URL
+      run: |
+        AWS_ALB_URL=$(aws eks get-token --cluster-name ${{ env.EKS_CLUSTER }} --query 'status.endpoint' --output text)
+        echo "REACT_APP_API_URL=http://$AWS_ALB_URL" > frontend/.env
+
+    - name: Build
+      working-directory: ./frontend
+      run: npm run build
+
+    - name: Deploy to S3
+      working-directory: ./frontend
+      run: |
+        aws s3 sync build/ s3://${{ env.S3_BUCKET }} --delete
+
+    - name: Invalidate CloudFront cache
+      run: |
+        aws cloudfront create-invalidation \
+          --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+          --paths "/*"
+
+    - name: Verify Deployment
+      run: |
+        # Check if index.html exists in S3
+        aws s3 ls s3://${{ env.S3_BUCKET }}/index.html
+        
+        # Get CloudFront distribution status
+        aws cloudfront get-distribution --id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+          --query 'Distribution.Status' --output text
+
+    - name: Send Notification
+      if: always()
+      uses: slackapi/slack-github-action@v1.24.0
+      with:
+        payload: |
+          {
+            "text": "Frontend Deployment Status: ${{ job.status }}\nCommit: ${{ github.sha }}\nEnvironment: Production"
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="03" author="digitalnotary">
+        <!-- Create tasks table -->
+        <createTable tableName="tasks">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="task_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_time" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_time" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Create task_documents table -->
+        <createTable tableName="task_documents">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="document_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="task_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_time" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Create task_users junction table -->
+        <createTable tableName="task_users">
+            <column name="task_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Add primary key constraint to task_users -->
+        <addPrimaryKey 
+            tableName="task_users" 
+            columnNames="task_id, user_id"/>
+
+        <!-- Add foreign key constraints -->
+        <addForeignKeyConstraint 
+            baseTableName="task_documents"
+            baseColumnNames="task_id"
+            constraintName="fk_task_documents_task"
+            referencedTableName="tasks"
+            referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint 
+            baseTableName="task_users"
+            baseColumnNames="task_id"
+            constraintName="fk_task_users_task"
+            referencedTableName="tasks"
+            referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint 
+            baseTableName="task_users"
+            baseColumnNames="user_id"
+            constraintName="fk_task_users_user"
+            referencedTableName="users"
+            referencedColumnNames="id"/>
+    </changeSet>
+
+</databaseChangeLog> 

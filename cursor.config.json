@@ -1,0 +1,21 @@
+{
+  "projectName": "micronaut-react-app",
+  "includePatterns": [
+    "micronautservice/src/**/*.groovy",
+    "micronautservice/src/**/*.yml",
+    "micronautservice/*.gradle",
+    "micronautservice/Dockerfile",
+    "frontend/src/**/*.jsx",
+    "frontend/src/**/*.js",
+    "frontend/src/**/*.css",
+    "k8s/*.yaml",
+    ".github/workflows/*.yml",
+    "Jenkinsfile"
+  ],
+  "excludePatterns": [
+    "**/node_modules/**",
+    "**/.gradle/**",
+    "**/build/**"
+  ],
+  "maxFileSize": 1000000
+} 

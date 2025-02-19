@@ -7,18 +7,45 @@ pipeline {
     agent any
 
     environment {
+        AWS_ACCOUNT_ID = credentials('aws-account-id')
         AWS_REGION = 'us-east-1'
-        ECR_REPO = '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/micronaut-app'
-        KUBE_CONFIG = credentials('eks-kubeconfig')
+        ECR_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/micronaut-app"
+        //KUBE_CONFIG = credentials('eks-kubeconfig')
         DOCKER_IMAGE = "micronaut-app"
         DOCKER_IMAGE_TAG = "v${BUILD_NUMBER}"
         S3_BUCKET = 'your-frontend-bucket'
-        CLOUDFRONT_DISTRIBUTION_ID = 'your-distribution-id'
-        NOTIFICATION_EMAIL = 'your-email@example.com'
-        MINIKUBE_IP = sh(script: 'minikube ip', returnStdout: true).trim()
+       // CLOUDFRONT_DISTRIBUTION_ID = 'your-distribution-id'
+        NOTIFICATION_EMAIL = 'vignesh.g@ideas2it.com'
+        //MINIKUBE_IP = sh(script: 'minikube ip', returnStdout: true).trim()
     }
 
     stages {
+        stage('Initialize Environment') {
+            steps {
+                script {
+                    bat '''
+                        @echo off
+                        REM Verify Minikube is running
+                        minikube status
+                        
+                        REM Set Docker environment to use local Minikube's Docker daemon
+                        FOR /f "tokens=*" %%i IN ('minikube -p minikube docker-env') DO @%%i
+                        
+                        REM Get Minikube IP
+                        FOR /f "tokens=*" %%i IN ('minikube ip') DO SET MINIKUBE_IP=%%i
+                        echo Minikube IP: %MINIKUBE_IP%
+                        
+                        REM Verify kubectl connection
+                        kubectl config use-context minikube
+                        kubectl cluster-info
+                    '''
+                    
+                    // Store Minikube IP for later use
+                    env.MINIKUBE_IP = bat(script: 'minikube ip', returnStdout: true).trim()
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -30,7 +57,7 @@ pipeline {
                 stage('Backend') {
                     steps {
                         dir('micronautservice') {
-                            sh './gradlew clean build test'
+                            bat './gradlew clean build test'
                         }
                     }
                 }
@@ -38,7 +65,7 @@ pipeline {
                 stage('Frontend') {
                     steps {
                         dir('frontend') {
-                            sh '''
+                            bat '''
                                 npm install
                                 npm run test
                             '''
@@ -51,11 +78,17 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    // Build image
-                    sh """
-                        eval \$(minikube docker-env)
-                        docker build -t ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG} ./micronautservice
-                    """
+                    bat '''
+                        @echo off
+                        REM Set Docker environment to use Minikube's Docker daemon
+                        FOR /f "tokens=*" %%i IN ('minikube -p minikube docker-env') DO @%%i
+                        
+                        REM Build the image
+                        docker build -t %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG% ./micronautservice
+                        
+                        REM Verify image
+                        docker images | findstr %DOCKER_IMAGE%
+                    '''
                 }
             }
         }
@@ -63,17 +96,36 @@ pipeline {
         stage('Deploy to Minikube') {
             steps {
                 script {
-                    // Update deployment manifest with new image tag
-                    sh """
-                        sed -i 's|image: .*|image: ${DOCKER_IMAGE}:${DOCKER_IMAGE_TAG}|' k8s/deployment.yaml
+                    bat '''
+                        @echo off
+                        REM Set Docker environment
+                        FOR /f "tokens=*" %%i IN ('minikube -p minikube docker-env') DO @%%i
                         
-                        # Apply Kubernetes manifests
+                        REM Update deployment image
+                        powershell -Command "(gc k8s/deployment.yaml) -replace 'image: .*', 'image: %DOCKER_IMAGE%:%DOCKER_IMAGE_TAG%' | Set-Content k8s/deployment.yaml"
+                        
+                        REM Deploy to Minikube
                         kubectl apply -f k8s/deployment.yaml
                         kubectl apply -f k8s/service.yaml
+                    '''
+
+                    // Add detailed deployment verification
+                    bat '''
+                        @echo off
+                        echo "=== Deployment Status ==="
+                        kubectl rollout status deployment/micronaut-app --timeout=60s
                         
-                        # Wait for deployment to complete
-                        kubectl rollout status deployment/micronaut-app -n default
-                    """
+                        echo "=== Pod Status ==="
+                        kubectl get pods -l app=micronaut-app
+                        
+                        echo "=== Pod Logs ==="
+                        FOR /f "tokens=*" %%p in ('kubectl get pods -l app=micronaut-app -o name') do (
+                            echo "Logs for %%p:"
+                            kubectl logs %%p
+                            echo "=== Pod Description ==="
+                            kubectl describe pod %%p
+                        )
+                    '''
                 }
             }
         }
@@ -81,15 +133,14 @@ pipeline {
         stage('Deploy Frontend') {
             steps {
                 dir('frontend') {
-                    // Update API URL in frontend configuration to use Minikube IP
-                    sh """
-                        BACKEND_URL="http://${MINIKUBE_IP}:80"
-                        echo "REACT_APP_API_URL=\${BACKEND_URL}" > .env
+                    bat """
+                        @echo off
+                        set BACKEND_URL=http://${env.MINIKUBE_IP}:80
+                        echo REACT_APP_API_URL=%BACKEND_URL% > .env
                         npm run build
                         
-                        # Serve frontend using a simple HTTP server
-                        npm install -g serve
-                        serve -s build -l 3000 &
+                        call npm install -g serve
+                        start /B serve -s build -l 3000
                     """
                 }
             }
@@ -100,10 +151,10 @@ pipeline {
                 stage('Backend Health Check') {
                     steps {
                         script {
-                            sh """
-                                # Wait for service to be available
-                                sleep 30
-                                curl -f http://${MINIKUBE_IP}:80/health || exit 1
+                            bat """
+                                @echo off
+                                timeout /t 30 /nobreak
+                                curl -f http://${env.MINIKUBE_IP}:80/health || exit 1
                             """
                         }
                     }
@@ -111,8 +162,29 @@ pipeline {
 
                 stage('Frontend Availability Check') {
                     steps {
-                        sh 'curl -f http://localhost:3000 || exit 1'
+                        bat 'curl -f http://localhost:3000 || exit 1'
                     }
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    bat '''
+                        @echo off
+                        echo "=== All Resources ==="
+                        kubectl get all
+                        
+                        echo "=== Events ==="
+                        kubectl get events --sort-by=.metadata.creationTimestamp
+                        
+                        echo "=== Pod Details ==="
+                        kubectl get pods -l app=micronaut-app -o wide
+                        
+                        echo "=== Service Details ==="
+                        kubectl get svc micronaut-app -o wide
+                    '''
                 }
             }
         }
@@ -129,7 +201,7 @@ pipeline {
                         Build Number: ${env.BUILD_NUMBER}
                         Status: ${currentBuild.result}
                         
-                        Backend URL: http://${MINIKUBE_IP}:80
+                        Backend URL: http://${env.MINIKUBE_IP}:80
                         Frontend URL: http://localhost:3000
                         
                         Check console output at: ${env.BUILD_URL}

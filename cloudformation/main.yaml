@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Main stack for EKS infrastructure'
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, prod]
+    Default: dev
+    Description: Environment type
+
+  VpcCIDR:
+    Type: String
+    Default: 10.0.0.0/16
+    Description: VPC CIDR block
+
+  ClusterName:
+    Type: String
+    Default: eks-cluster
+    Description: Name of the EKS cluster
+
+Mappings:
+  EnvironmentMap:
+    dev:
+      InstanceType: t3.medium
+      NodeCount: 2
+      MaxNodeCount: 4
+    prod:
+      InstanceType: t3.large
+      NodeCount: 3
+      MaxNodeCount: 6
+
+Resources:
+  NetworkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${AWS::Region}-templates.s3.amazonaws.com/network.yaml'
+      Parameters:
+        Environment: !Ref Environment
+        VpcCIDR: !Ref VpcCIDR
+
+  EksStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: NetworkStack
+    Properties:
+      TemplateURL: !Sub 'https://${AWS::Region}-templates.s3.amazonaws.com/eks.yaml'
+      Parameters:
+        Environment: !Ref Environment
+        ClusterName: !Ref ClusterName
+        VpcId: !GetAtt NetworkStack.Outputs.VpcId
+        PrivateSubnet1: !GetAtt NetworkStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt NetworkStack.Outputs.PrivateSubnet2
+        NodeInstanceType: !FindInMap [EnvironmentMap, !Ref Environment, InstanceType]
+        NodeCount: !FindInMap [EnvironmentMap, !Ref Environment, NodeCount]
+        MaxNodeCount: !FindInMap [EnvironmentMap, !Ref Environment, MaxNodeCount]
+
+Outputs:
+  ClusterEndpoint:
+    Description: EKS cluster endpoint
+    Value: !GetAtt EksStack.Outputs.ClusterEndpoint
+
+  ClusterARN:
+    Description: EKS cluster ARN
+    Value: !GetAtt EksStack.Outputs.ClusterARN 

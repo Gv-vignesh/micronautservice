@@ -109,4 +109,18 @@ tasks.withType(JavaExec) {
     // Add debug logging
     systemProperty "org.gradle.debug", "true"
     systemProperty "io.micronaut.context.env", "debug"
+}
+
+// Add or verify these configurations
+jar {
+    enabled = true
+    archiveClassifier = ''  // Removes the 'plain' classifier
+}
+
+tasks.withType(Jar) {
+    manifest {
+        attributes(
+            'Main-Class': 'com.example.Application'  // Update with your main class
+        )
+    }
 } 
