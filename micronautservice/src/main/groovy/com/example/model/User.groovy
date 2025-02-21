@@ -4,10 +4,16 @@ import io.micronaut.data.annotation.GeneratedValue
 import io.micronaut.data.annotation.Id
 import io.micronaut.data.annotation.MappedEntity
 import io.micronaut.data.annotation.TypeDef
+import io.micronaut.data.annotation.Relation
+import io.micronaut.data.annotation.MappedProperty
 import io.micronaut.data.model.DataType
 import io.micronaut.serde.annotation.Serdeable
+import com.example.model.Task
 import jakarta.persistence.*
 import java.time.Instant
+import jakarta.persistence.JoinTable
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToMany
 
 @MappedEntity("users")
 @Serdeable
@@ -28,7 +34,8 @@ class User {
     Date createdAt
     Date updatedAt
     
-    @ManyToMany(mappedBy = "users")
+    @MappedProperty("tasks")
+    @Relation(value = Relation.Kind.MANY_TO_MANY, mappedBy = "users", cascade = Relation.Cascade.ALL)
     Set<Task> tasks = new HashSet<>()
     
     User() {
@@ -98,5 +105,17 @@ class User {
 
     void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt
+    }
+
+    void addTask(Task task) {
+        if (task != null) {
+            tasks.add(task)
+        }
+    }
+
+    void removeTask(Task task) {
+        if (task != null) {
+            tasks.remove(task)
+        }
     }
 } 

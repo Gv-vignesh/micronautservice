@@ -4,9 +4,13 @@ import io.micronaut.data.annotation.*
 import io.micronaut.data.model.DataType
 import io.micronaut.serde.annotation.Serdeable
 import java.time.Instant
+import jakarta.persistence.JoinTable
+import jakarta.persistence.JoinColumn
+import com.example.model.User
+import jakarta.persistence.ManyToMany
 
 @Serdeable
-@MappedEntity
+@MappedEntity("tasks")
 class Task {
     static final String STATUS_PENDING = "PENDING"
     static final String STATUS_IN_PROGRESS = "IN_PROGRESS"
@@ -32,7 +36,13 @@ class Task {
     @Relation(Relation.Kind.ONE_TO_MANY)
     Set<TaskDocument> documents = new HashSet<>()
 
-    @Relation(Relation.Kind.MANY_TO_MANY)
+    @MappedProperty("users")
+    @Relation(value = Relation.Kind.MANY_TO_MANY, cascade = Relation.Cascade.ALL)
+    @JoinTable(
+        name = "task_users",
+        joinColumns = @JoinColumn(name = "task_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
     Set<User> users = new HashSet<>()
 
     Task() {
@@ -71,10 +81,14 @@ class Task {
     }
 
     void addUser(User user) {
-        users.add(user)
+        if (user != null) {
+            users.add(user)
+        }
     }
 
     void removeUser(User user) {
-        users.remove(user)
+        if (user != null) {
+            users.remove(user)
+        }
     }
 } 

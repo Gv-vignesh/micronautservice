@@ -6,7 +6,7 @@ import java.time.Instant
 import java.util.UUID
 
 @Serdeable
-@MappedEntity
+@MappedEntity("task_documents")
 class TaskDocument {
     @Id
     @GeneratedValue
